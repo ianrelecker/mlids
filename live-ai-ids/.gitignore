@@ -1,0 +1,43 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# Captured data
+data/*.csv
+
+# Trained models
+models/*.pt
+
+# Results
+results/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
