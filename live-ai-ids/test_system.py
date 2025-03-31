@@ -107,7 +107,7 @@ def test_model():
     # Test open-set classifier
     print("\nTesting open-set classifier...")
     open_set_classifier = OpenSetClassifier(threshold=0.5)
-    probabilities = torch.softmax(outputs, dim=1).cpu().numpy()
+    probabilities = torch.softmax(outputs, dim=1).detach().cpu().numpy()
     is_known = open_set_classifier.predict(probabilities)
     
     print(f"Open-set classifier predictions: {is_known}")

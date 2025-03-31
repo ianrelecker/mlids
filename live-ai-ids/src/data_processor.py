@@ -41,7 +41,7 @@ class PacketCapture:
         self.max_packets = max_packets
         self.buffer_size = buffer_size
         self.packet_buffer = queue.Queue(maxsize=buffer_size)
-        self.stop_capture = threading.Event()
+        self._stop_flag = threading.Event()
         self.capture_thread = None
         self.packet_count = 0
         self.start_time = None
@@ -52,7 +52,7 @@ class PacketCapture:
             print("Packet capture already running.")
             return
         
-        self.stop_capture.clear()
+        self._stop_flag.clear()
         self.packet_count = 0
         self.start_time = time.time()
         
@@ -68,7 +68,7 @@ class PacketCapture:
             print("No packet capture running.")
             return
         
-        self.stop_capture.set()
+        self._stop_flag.set()
         self.capture_thread.join(timeout=2.0)
         
         duration = time.time() - self.start_time
@@ -77,7 +77,7 @@ class PacketCapture:
     def _capture_packets(self):
         """Internal method to capture packets using Scapy."""
         def packet_callback(packet):
-            if self.stop_capture.is_set() or self.packet_count >= self.max_packets:
+            if self._stop_flag.is_set() or self.packet_count >= self.max_packets:
                 return
             
             try:
@@ -90,7 +90,7 @@ class PacketCapture:
                         
                     if self.packet_count >= self.max_packets:
                         print(f"Reached maximum packet count ({self.max_packets})")
-                        self.stop_capture.set()
+                        self._stop_flag.set()
             except queue.Full:
                 pass  # Buffer is full, skip this packet
         
@@ -99,11 +99,11 @@ class PacketCapture:
                 iface=self.interface,
                 prn=packet_callback,
                 store=False,
-                stop_filter=lambda _: self.stop_capture.is_set()
+                stop_filter=lambda _: self._stop_flag.is_set()
             )
         except Exception as e:
             print(f"Error in packet capture: {e}")
-            self.stop_capture.set()
+            self._stop_flag.set()
     
     def get_packets(self, count=None, timeout=1.0):
         """
@@ -126,7 +126,7 @@ class PacketCapture:
                     packets.append(packet)
                     self.packet_buffer.task_done()
                 except queue.Empty:
-                    if self.stop_capture.is_set() and self.packet_buffer.empty():
+                    if self._stop_flag.is_set() and self.packet_buffer.empty():
                         break
         except Exception as e:
             print(f"Error getting packets: {e}")
@@ -389,7 +389,17 @@ class DataProcessor:
         """
         print('Preprocessing data...')
         
-        # Handle infinity values
+        # Handle infinity values and non-numeric values
+        # First, ensure all columns are numeric
+        for col in data.columns:
+            if col != 'Label':  # Skip the Label column
+                try:
+                    # Try to convert to float, which can handle NaN values
+                    data[col] = pd.to_numeric(data[col], errors='coerce')
+                except Exception as e:
+                    print(f"Warning: Could not convert column {col} to numeric: {e}")
+        
+        # Now replace infinity values
         data.replace([float('inf'), float('-inf')], np.nan, inplace=True)
         data.dropna(inplace=True)
         
@@ -522,15 +532,37 @@ class DataProcessor:
             return [], []
         
         # Prepare features
-        X = data.drop(columns=['Label']).values
+        X = data.drop(columns=['Label'])
+        
+        # Ensure all columns are numeric
+        for col in X.columns:
+            try:
+                # Try to convert to float, which can handle NaN values
+                X[col] = pd.to_numeric(X[col], errors='coerce')
+            except Exception as e:
+                print(f"Warning: Could not convert column {col} to numeric: {e}")
+        
+        # Replace infinity values
+        X.replace([float('inf'), float('-inf')], np.nan, inplace=True)
+        
+        # Fill NaN values with 0
+        X.fillna(0, inplace=True)
+        
+        # Convert to numpy array
+        X_values = X.values
         
         # Scale features if scaler is provided
         if scaler:
-            X = scaler.transform(X)
+            try:
+                X_values = scaler.transform(X_values)
+            except Exception as e:
+                print(f"Warning: Error in scaling features: {e}")
+                # If scaling fails, just use the unscaled features
+                pass
         
         # Convert to PyTorch tensor
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        X_tensor = torch.tensor(X, dtype=torch.float32).to(device)
+        X_tensor = torch.tensor(X_values, dtype=torch.float32).to(device)
         
         # Get predictions
         model.eval()

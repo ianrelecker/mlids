@@ -271,9 +271,26 @@ class Trainer:
         Returns:
             report: Classification report as string
         """
-        report = classification_report(y_true, y_pred, target_names=class_names, zero_division=0)
-        print("Classification Report:")
-        print(report)
+        # Get unique classes in the data
+        unique_classes = np.unique(np.concatenate([y_true, y_pred]))
+        
+        # If there's only one class, we need to handle it specially
+        if len(unique_classes) == 1:
+            print("Classification Report:")
+            print(f"Only one class present in the test set: {class_names[unique_classes[0]]}")
+            report = f"Only one class present: {class_names[unique_classes[0]]}\n"
+            report += f"Accuracy: {accuracy_score(y_true, y_pred):.2f}"
+        else:
+            # Use the labels parameter to specify which labels to include in the report
+            report = classification_report(
+                y_true, 
+                y_pred, 
+                labels=unique_classes,
+                target_names=[class_names[i] for i in unique_classes], 
+                zero_division=0
+            )
+            print("Classification Report:")
+            print(report)
         
         # Save the report
         results_dir = self.config.get('results_dir', 'results')

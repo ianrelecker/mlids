@@ -15,6 +15,7 @@ import threading
 import queue
 import numpy as np
 import torch
+import scapy.all as scapy
 from .model import OpenSetClassifier
 from .data_processor import DataProcessor
 
@@ -47,7 +48,7 @@ class Detector:
         
         # Set up detection thread
         self.detection_thread = None
-        self.stop_detection = threading.Event()
+        self._stop_flag = threading.Event()
         self.alert_queue = queue.Queue()
         
         # Detection statistics
@@ -67,7 +68,7 @@ class Detector:
             print("Detection already running.")
             return
         
-        self.stop_detection.clear()
+        self._stop_flag.clear()
         self.total_packets = 0
         self.benign_packets = 0
         self.attack_packets = 0
@@ -90,7 +91,7 @@ class Detector:
             print("No detection running.")
             return
         
-        self.stop_detection.set()
+        self._stop_flag.set()
         self.data_processor.packet_capture.stop_capture()
         self.detection_thread.join(timeout=2.0)
         
@@ -106,7 +107,7 @@ class Detector:
         batch_size = self.config.get('detection_batch_size', 32)
         detection_interval = self.config.get('detection_interval', 1.0)  # seconds
         
-        while not self.stop_detection.is_set():
+        while not self._stop_flag.is_set():
             # Get packets from the buffer
             packets = self.data_processor.packet_capture.get_packets(
                 count=batch_size,
@@ -165,8 +166,23 @@ class Detector:
         else:
             timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
         
-        src_ip = packet[packet.name].src if hasattr(packet, 'name') and hasattr(packet[packet.name], 'src') else "Unknown"
-        dst_ip = packet[packet.name].dst if hasattr(packet, 'name') and hasattr(packet[packet.name], 'dst') else "Unknown"
+        # Try to get source and destination addresses
+        src_ip = "Unknown"
+        dst_ip = "Unknown"
+        
+        # First try to get MAC addresses (always present in Ethernet frames)
+        if hasattr(packet, 'src'):
+            src_ip = packet.src
+        if hasattr(packet, 'dst'):
+            dst_ip = packet.dst
+        
+        # Try to get IP addresses if available
+        if scapy.IP in packet:
+            src_ip = packet[scapy.IP].src
+            dst_ip = packet[scapy.IP].dst
+        elif scapy.IPv6 in packet:
+            src_ip = packet[scapy.IPv6].src
+            dst_ip = packet[scapy.IPv6].dst
         
         alert = {
             'timestamp': timestamp,

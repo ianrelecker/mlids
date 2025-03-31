@@ -121,6 +121,28 @@ def main():
         logger.info("Model metadata:")
         for key, value in metadata.items():
             logger.info(f"  {key}: {value}")
+        
+        # Load scaler and label_encoder
+        import pickle
+        scaler_path = os.path.join(os.path.dirname(args.model), 'scaler.pkl')
+        label_encoder_path = os.path.join(os.path.dirname(args.model), 'label_encoder.pkl')
+        
+        scaler = None
+        label_encoder = None
+        
+        if os.path.exists(scaler_path):
+            with open(scaler_path, 'rb') as f:
+                scaler = pickle.load(f)
+            logger.info(f"Scaler loaded from {scaler_path}")
+        else:
+            logger.warning(f"Scaler file not found: {scaler_path}")
+        
+        if os.path.exists(label_encoder_path):
+            with open(label_encoder_path, 'rb') as f:
+                label_encoder = pickle.load(f)
+            logger.info(f"Label encoder loaded from {label_encoder_path}")
+        else:
+            logger.warning(f"Label encoder file not found: {label_encoder_path}")
     except Exception as e:
         logger.error(f"Error loading model: {e}")
         return
@@ -130,8 +152,8 @@ def main():
     detector = Detector(
         model=model,
         config=config,
-        scaler=metadata.get('scaler'),
-        label_encoder=metadata.get('label_encoder')
+        scaler=scaler,
+        label_encoder=label_encoder
     )
     
     # Set up signal handler for graceful exit

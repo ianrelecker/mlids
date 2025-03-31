@@ -9,6 +9,7 @@ This module implements:
 2. Helper classes for model components
 """
 
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -136,10 +137,20 @@ def save_model(model, path, metadata=None):
     if metadata is None:
         metadata = {}
     
+    # Remove non-serializable objects from metadata
+    clean_metadata = {}
+    for key, value in metadata.items():
+        # Skip scaler and label_encoder objects
+        if key not in ['scaler', 'label_encoder']:
+            clean_metadata[key] = value
+    
     save_dict = {
         'model_state_dict': model.state_dict(),
-        'metadata': metadata
+        'metadata': clean_metadata
     }
+    
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     
     torch.save(save_dict, path)
     print(f"Model saved to {path}")

@@ -238,13 +238,27 @@ def main():
         'num_classes': data_partitions['num_classes'],
         'class_names': data_partitions['class_names'].tolist(),
         'accuracy': accuracy,
-        'scaler': data_processor.scaler,
-        'label_encoder': data_partitions['label_encoder'],
         'training_date': time.strftime('%Y-%m-%d %H:%M:%S'),
         'config': config
     }
     save_model(model, model_path, metadata)
     logger.info(f"Model saved to {model_path}")
+    
+    # Save scaler and label_encoder separately
+    import pickle
+    scaler_path = os.path.join(config.get('model_dir', 'models'), 'scaler.pkl')
+    label_encoder_path = os.path.join(config.get('model_dir', 'models'), 'label_encoder.pkl')
+    
+    os.makedirs(os.path.dirname(scaler_path), exist_ok=True)
+    
+    with open(scaler_path, 'wb') as f:
+        pickle.dump(data_processor.scaler, f)
+    
+    with open(label_encoder_path, 'wb') as f:
+        pickle.dump(data_partitions['label_encoder'], f)
+    
+    logger.info(f"Scaler saved to {scaler_path}")
+    logger.info(f"Label encoder saved to {label_encoder_path}")
     
     print(f"\nTraining completed successfully!")
     print(f"Model saved to {model_path}")
