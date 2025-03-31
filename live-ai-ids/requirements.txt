@@ -6,3 +6,13 @@ seaborn>=0.11.0
 scikit-learn>=0.23.0
 scapy>=2.4.5
 ipaddress>=1.0.23
+
+# For CUDA support (NVIDIA GPUs)
+# Install appropriate version based on your CUDA version
+# e.g., for CUDA 11.7:
+# torch==1.13.0+cu117 -f https://download.pytorch.org/whl/cu117/torch_stable.html
+
+# For MPS support (Apple Silicon M1/M2/M3)
+# Requires macOS 12.3+
+# Use PyTorch 2.0.0+ for best MPS support
+# pip install torch>=2.0.0

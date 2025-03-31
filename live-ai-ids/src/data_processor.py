@@ -479,7 +479,15 @@ class DataProcessor:
         X_test = self.scaler.transform(X_test)
         
         # Get device for PyTorch tensors
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+            device = torch.device("mps")
+            print("Using MPS (Apple Silicon GPU) device for training")
+        elif torch.cuda.is_available():
+            device = torch.device("cuda")
+            print("Using CUDA device for training")
+        else:
+            device = torch.device("cpu")
+            print("Using CPU device for training")
         
         # Create PyTorch tensors
         X_train_tensor = torch.tensor(X_train, dtype=torch.float32).to(device)
@@ -561,7 +569,12 @@ class DataProcessor:
                 pass
         
         # Convert to PyTorch tensor
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+            device = torch.device("mps")
+        elif torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
         X_tensor = torch.tensor(X_values, dtype=torch.float32).to(device)
         
         # Get predictions

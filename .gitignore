@@ -1,0 +1,103 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.env
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Machine Learning
+*.pt
+*.pth
+*.pkl
+*.h5
+*.hdf5
+*.model
+*.joblib
+*.npz
+*.npy
+
+# Project specific
+live-ai-ids/data/*.csv
+data/*.csv
+live-ai-ids/models/*.pt
+models/*.pt
+live-ai-ids/models/*.pkl
+models/*.pkl
+live-ai-ids/results/logs/*.log
+results/logs/*.log
+live-ai-ids/results/*.png
+results/*.png
+live-ai-ids/results/*.txt
+results/*.txt
+
+# Configuration files (may contain sensitive information)
+# Uncomment if you want to exclude config files from version control
+# config.json
+# live-ai-ids/config.json
+
+# Allow README files in empty directories
+!live-ai-ids/data/README.md
+!data/README.md
+!live-ai-ids/models/README.md
+!models/README.md
+!live-ai-ids/results/README.md
+!results/README.md
+!live-ai-ids/results/logs/README.md
+!results/logs/README.md
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

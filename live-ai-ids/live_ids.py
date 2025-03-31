@@ -113,7 +113,21 @@ def main():
     # Load the model
     try:
         logger.info(f"Loading model from {args.model}...")
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        # Select the appropriate device (MPS for Apple Silicon, CUDA for NVIDIA GPUs, or CPU)
+        if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+            device = torch.device("mps")
+            logger.info("Using MPS (Apple Silicon GPU) device for inference")
+            print("Using MPS (Apple Silicon GPU) device for inference")
+        elif torch.cuda.is_available():
+            device = torch.device("cuda")
+            logger.info("Using CUDA device for inference")
+            print("Using CUDA device for inference")
+        else:
+            device = torch.device("cpu")
+            logger.info("Using CPU device for inference")
+            print("Using CPU device for inference")
+            
         model, metadata = load_model(args.model, device=device)
         logger.info(f"Model loaded successfully. Device: {device}")
         

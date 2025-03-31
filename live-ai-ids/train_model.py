@@ -198,7 +198,20 @@ def main():
     
     # Create model
     logger.info("Creating model...")
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # Select the appropriate device (MPS for Apple Silicon, CUDA for NVIDIA GPUs, or CPU)
+    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        device = torch.device("mps")
+        logger.info("Using MPS (Apple Silicon GPU) device for training")
+        print("Using MPS (Apple Silicon GPU) device for training")
+    elif torch.cuda.is_available():
+        device = torch.device("cuda")
+        logger.info("Using CUDA device for training")
+        print("Using CUDA device for training")
+    else:
+        device = torch.device("cpu")
+        logger.info("Using CPU device for training")
+        print("Using CPU device for training")
+    
     model = DeepConcatenatedCNN(
         input_size=data_partitions['input_size'],
         num_classes=data_partitions['num_classes']

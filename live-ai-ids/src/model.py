@@ -168,7 +168,16 @@ def load_model(path, model_class=DeepConcatenatedCNN, device=None):
         Tuple of (model, metadata)
     """
     if device is None:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # Check for MPS (Apple Silicon GPU) first, then CUDA, then fall back to CPU
+        if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+            device = torch.device("mps")
+            print("Using MPS (Apple Silicon GPU) device for model inference")
+        elif torch.cuda.is_available():
+            device = torch.device("cuda")
+            print("Using CUDA device for model inference")
+        else:
+            device = torch.device("cpu")
+            print("Using CPU device for model inference")
     
     # Load the saved dictionary
     save_dict = torch.load(path, map_location=device)
